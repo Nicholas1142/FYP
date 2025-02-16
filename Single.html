@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFDD57;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .levels, .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .level {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .level:hover {
+            background-color: #003d82;
+        }
+        .locked {
+            background-color: #b3b3b3;
+            cursor: not-allowed;
+        }
+        .game-container {
+            display: none;
+            grid-template-columns: repeat(4, 80px);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+        .card {
+            width: 80px;
+            height: 100px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+        .card-front {
+            background: white;
+            transform: rotateY(180deg);
+        }
+        .card-back {
+            background: #FFA500;
+        }
+        .stats {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .card-front img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保持比例并填充 */
+}
+
+    </style>
+</head>
+<body>
+    <div class="container" id="level-selection">
+        <h1 class="title">选择关卡</h1>
+        <div class="levels">
+            <button class="level" data-level="1">LEVEL 1</button>
+            <button class="level locked" data-level="2" disabled>LEVEL 2 🔒</button>
+            <button class="level locked" data-level="3" disabled>LEVEL 3 🔒</button>
+            <button class="level locked" data-level="4" disabled>LEVEL 4 🔒</button>
+            <button class="level locked" data-level="5" disabled>LEVEL 5 🔒</button>
+        </div>
+    </div>
+    <div class="stats">
+        <p>⏳ 游戏时间: <span id="time">0</span> 秒</p>
+        <p>🔄 移动次数: <span id="moves">0</span></p>
+        <p>❌ 错误次数: <span id="errors">0</span></p>
+    </div>
+    <div class="game-container"></div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const levelButtons = document.querySelectorAll(".level");
+            let unlockedLevels = parseInt(localStorage.getItem("unlockedLevels")) || 1;
+            const gameContainer = document.querySelector(".game-container");
+            const statsContainer = document.querySelector(".stats");
+            let moveCount = 0, errorCount = 0;
+            
+            levelButtons.forEach(button => {
+                let level = parseInt(button.getAttribute("data-level"));
+                if (level <= unlockedLevels) {
+                    button.classList.remove("locked");
+                    button.removeAttribute("disabled");
+                    button.addEventListener("click", function() {
+                        document.getElementById("level-selection").style.display = "none";
+                        gameContainer.style.display = "grid";
+                        statsContainer.style.display = "block";
+                        startGame(level);
+                    });
+                }
+            });
+
+            function startGame(level) {
+                let images = ['card/img 1.jpg', 'card/img 2.jpg', 'card/img 3.jpg', 'card/img 4.jpg', 'card/img 5.avif', 'card/img 6.jpg'];
+                let cards = [...images, ...images];
+                gameContainer.innerHTML = '';
+                cards.sort(() => Math.random() - 0.5);
+                cards.forEach(imgSrc => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.innerHTML = `
+                        <div class="card-inner">
+                            <div class="card-front"><img src="${imgSrc}"></div>
+                            <div class="card-back"></div>
+                        </div>
+                    `;
+                    card.addEventListener('click', () => handleCardClick(card));
+                    gameContainer.appendChild(card);
+                });
+                moveCount = 0;
+                errorCount = 0;
+            }
+            function handleCardClick(card) {
+                card.classList.add('flipped');
+                moveCount++;
+                setTimeout(() => {
+                    let flipped = document.querySelectorAll('.flipped');
+                    if (flipped.length === 2) {
+                        if (flipped[0].innerHTML !== flipped[1].innerHTML) {
+                            flipped.forEach(c => c.classList.remove('flipped'));
+                            errorCount++;
+                        }
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
