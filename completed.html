@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Completed</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFDD57;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* 主容器 */
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 300px;
+        }
+
+        /* 标题部分 */
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        /* 星星动画 */
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .star {
+            width: 30px;
+            height: 30px;
+            background: gold;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: bounce 1.5s infinite alternate;
+        }
+
+        /* 星星动画 */
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+
+        /* 分数部分 */
+        .score-box {
+            background: #6AB7FF;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        /* 上次最高分 */
+        .last-score {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* 头像 */
+        .profile-img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-top: 5px;
+        }
+
+        /* 按钮区域 */
+        .buttons {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .next-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: white;
+            box-shadow: 0 4px 8px rgba(255, 165, 0, 0.4);
+        }
+
+        .next-btn:hover {
+            background: linear-gradient(45deg, #FFC107, #FF8C00);
+        }
+
+        .dashboard-btn {
+            background: linear-gradient(45deg, #FF4081, #FF1744);
+            color: white;
+            box-shadow: 0 4px 8px rgba(255, 23, 68, 0.4);
+        }
+
+        .dashboard-btn:hover {
+            background: linear-gradient(45deg, #FF5252, #D50000);
+        }
+
+        /* 返回按钮 */
+        .back {
+            font-size: 24px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 标题 -->
+        <div class="title">NEW BEST SCORE <br>KEEP YOUR PROGRESS!</div>
+
+        <!-- 星星 -->
+        <div class="stars">
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+        </div>
+
+        <!-- 分数显示 -->
+        <div class="score-box">
+            SCORE : <span id="current-score">1200</span>
+            <div class="last-score">LAST BEST SCORE : 400</div>
+            <img class="profile-img" src="https://randomuser.me/api/portraits/men/32.jpg" alt="profile">
+        </div>
+
+        <!-- 按钮 -->
+        <div class="buttons">
+            <button class="btn next-btn">NEXT LEVEL</button>
+            <button class="btn dashboard-btn">DASHBOARD</button>
+        </div>
+
+        <!-- 返回 -->
+        <div class="back">🔄</div>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    let gameStats = JSON.parse(localStorage.getItem("gameStats"));
+
+    if (gameStats) {
+        document.getElementById("current-score").textContent = gameStats.score;
+        document.querySelector(".last-score").textContent = `LAST BEST SCORE: ${localStorage.getItem("bestScore") || 0}`;
+
+        // 更新最高分
+        let bestScore = parseInt(localStorage.getItem("bestScore")) || 0;
+        if (gameStats.score > bestScore) {
+            localStorage.setItem("bestScore", gameStats.score);
+        }
+    }
+
+    // 绑定按钮功能
+    document.querySelector(".next-btn").addEventListener("click", function() {
+        let nextLevel = gameStats.level + 1;
+        if (nextLevel <= 5) {
+            localStorage.setItem("unlockedLevels", nextLevel);
+            window.location.href = "index.html"; // 返回主页面选择新关卡
+        } else {
+            alert("🎉 恭喜你完成所有关卡！");
+        }
+    });
+
+    document.querySelector(".dashboard-btn").addEventListener("click", function() {
+        window.location.href = "index.html";
+    });
+
+    document.querySelector(".back").addEventListener("click", function() {
+        window.location.href = "index.html";
+    });
+});
+
+    </script>
+</body>
+</html>
