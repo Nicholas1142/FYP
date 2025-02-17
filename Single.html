@@ -123,122 +123,122 @@
     <div class="game-container"></div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const levelButtons = document.querySelectorAll(".level");
-            let unlockedLevels = parseInt(localStorage.getItem("unlockedLevels")) || 1;
-            const gameContainer = document.querySelector(".game-container");
-            const statsContainer = document.querySelector(".stats");
-            let moveCount = 0, errorCount = 0, timeCount = 0, score = 0;
-            let timer;
+       document.addEventListener("DOMContentLoaded", function() {
+    const levelButtons = document.querySelectorAll(".level");
+    let unlockedLevels = parseInt(localStorage.getItem("unlockedLevels")) || 1;
+    const gameContainer = document.querySelector(".game-container");
+    const statsContainer = document.querySelector(".stats");
+    let moveCount = 0, errorCount = 0, timeCount = 0, score = 0, timer;
+    let currentLevel = 1;
 
-            levelButtons.forEach(button => {
-                let level = parseInt(button.getAttribute("data-level"));
-                if (level <= unlockedLevels) {
-                    button.classList.remove("locked");
-                    button.removeAttribute("disabled");
-                    button.addEventListener("click", function() {
-                        document.getElementById("level-selection").style.display = "none";
-                        gameContainer.style.display = "grid";
-                        statsContainer.style.display = "block";
-                        startGame(level);
-                    });
-                }
+    levelButtons.forEach(button => {
+        let level = parseInt(button.getAttribute("data-level"));
+        if (level <= unlockedLevels) {
+            button.classList.remove("locked");
+            button.removeAttribute("disabled");
+            button.addEventListener("click", function() {
+                currentLevel = level;
+                document.getElementById("level-selection").style.display = "none";
+                gameContainer.style.display = "grid";
+                statsContainer.style.display = "block";
+                startGame(level);
             });
+        }
 
-            function startGame(level) {
-                let images = ['card/img 1.jpg', 'card/img 2.jpg', 'card/img 3.jpg', 'card/img 4.jpg', 'card/img 6.avif', 'card/img 5.jpg'];
-                let cards = [...images, ...images];  // 复制一份进行匹配
-                gameContainer.innerHTML = '';
-                cards.sort(() => Math.random() - 0.5);
-
-                cards.forEach(imgSrc => {
-                    const card = document.createElement('div');
-                    card.classList.add('card');
-                    card.innerHTML = `
-                        <div class="card-inner">
-                            <div class="card-front"><img src="${imgSrc}"></div>
-                            <div class="card-back"></div>
-                        </div>
-                    `;
-                    card.addEventListener('click', () => handleCardClick(card));
-                    gameContainer.appendChild(card);
-                });
-
-                moveCount = 0;
-                errorCount = 0;
-                timeCount = 0;
-                score = 0;
-                updateStats();
-
-                if (timer) clearInterval(timer);
-                timer = setInterval(() => {
-                    timeCount++;
-                    document.getElementById("time").textContent = timeCount;
-                }, 1000);
-            }
-
-            let flippedCards = [];
-            let lockBoard = false;
-
-            function handleCardClick(card) {
-                if (lockBoard || flippedCards.includes(card) || card.classList.contains('matched')) return;
-
-                card.classList.add('flipped');
-                flippedCards.push(card);
-                moveCount++;
-                document.getElementById("moves").textContent = moveCount;
-
-                if (flippedCards.length === 2) {
-                    lockBoard = true;
-                    setTimeout(checkForMatch, 1000);
-                }
-            }
-            function checkForMatch() {
-    let [card1, card2] = flippedCards;
-    let img1 = card1.querySelector('.card-front img').src;
-    let img2 = card2.querySelector('.card-front img').src;
-
-    if (img1 === img2) {
-        card1.classList.add('matched');
-        card2.classList.add('matched');
-        score += 10;  // 成功匹配得 10 分
-        document.getElementById("score").textContent = score;
-    } else {
-        card1.classList.remove('flipped');
-        card2.classList.remove('flipped');
-        errorCount++;
-        document.getElementById("errors").textContent = errorCount;
-    }
-
-    flippedCards = [];
-    lockBoard = false;
-
-    // 检查是否完成所有匹配
-    if (document.querySelectorAll('.card.matched').length === document.querySelectorAll('.card').length) {
-        clearInterval(timer);
         
-        // 存储成绩到 localStorage
-        let gameStats = {
-            level: currentLevel,
-            time: timeCount,
-            moves: moveCount,
-            errors: errorCount,
-            score: score
-        };
-        localStorage.setItem("gameStats", JSON.stringify(gameStats));
+    });
 
-        // 跳转到 completed.html
-        window.location.href = "completed.html";
-    }
-}
+    function startGame(level) {
+        let images = ['card/img 1.jpg', 'card/img 2.jpg', 'card/img 3.jpg', 'card/img 4.jpg'];
+        let cards = [...images, ...images];  
+        gameContainer.innerHTML = '';
+        cards.sort(() => Math.random() - 0.5);
 
-
-            function updateStats() {
-                document.getElementById("moves").textContent = moveCount;
-                document.getElementById("errors").textContent = errorCount;
-                document.getElementById("score").textContent = score;
-            }
+        cards.forEach(imgSrc => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front"><img src="${imgSrc}"></div>
+                    <div class="card-back"></div>
+                </div>
+            `;
+            card.addEventListener('click', () => handleCardClick(card));
+            gameContainer.appendChild(card);
         });
+
+        moveCount = 0;
+        errorCount = 0;
+        timeCount = 0;
+        score = 0;
+        updateStats();
+
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+            timeCount++;
+            document.getElementById("time").textContent = timeCount;
+        }, 1000);
+    }
+
+    let flippedCards = [];
+    let lockBoard = false;
+
+    function handleCardClick(card) {
+        if (lockBoard || flippedCards.includes(card) || card.classList.contains('matched')) return;
+        card.classList.add('flipped');
+        flippedCards.push(card);
+        moveCount++;
+        document.getElementById("moves").textContent = moveCount;
+
+        if (flippedCards.length === 2) {
+            lockBoard = true;
+            setTimeout(checkForMatch, 1000);
+        }
+    }
+
+    function checkForMatch() {
+        let [card1, card2] = flippedCards;
+        let img1 = card1.querySelector('.card-front img').src;
+        let img2 = card2.querySelector('.card-front img').src;
+
+        if (img1 === img2) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            score += 10;
+            document.getElementById("score").textContent = score;
+        } else {
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            errorCount++;
+            document.getElementById("errors").textContent = errorCount;
+        }
+
+        flippedCards = [];
+        lockBoard = false;
+
+        if (document.querySelectorAll('.card.matched').length === document.querySelectorAll('.card').length) {
+            clearInterval(timer);
+            localStorage.setItem("gameStats", JSON.stringify({
+                level: currentLevel,
+                time: timeCount,
+                moves: moveCount,
+                errors: errorCount,
+                score: score
+            }));
+            localStorage.setItem("unlockedLevels", Math.max(currentLevel + 1, unlockedLevels));
+            setTimeout(() => {
+                window.location.href = "completed.html";
+            }, 1000);
+        }
+    }
+
+    function updateStats() {
+        document.getElementById("moves").textContent = moveCount;
+        document.getElementById("errors").textContent = errorCount;
+        document.getElementById("score").textContent = score;
+    }
+});
+
     </script>
 </body>
 </html>
