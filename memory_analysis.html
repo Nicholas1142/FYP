@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 80%; margin: 0 auto; }
+        canvas { max-width: 400px; max-height: 400px; margin: 20px auto; display: block; }
+        .stats { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .stat-item { font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <h2>记忆分析报告</h2>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-item">✅ 正确匹配次数: <span id="correctMatches">0</span></div>
+            <div class="stat-item">🔄 总步数（每翻两张算一步）: <span id="totalSteps">0</span></div>
+            <div class="stat-item">❌ 错误次数: <span id="wrongAttempts">0</span></div>
+            <div class="stat-item">⏱ 平均反应时间 (秒): <span id="reactionTime">0</span></div>
+        </div>
+
+        <canvas id="memoryRadarChart"></canvas>
+        
+        <button onclick="window.location.href='index.html'">返回首页</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let totalSteps = parseInt(localStorage.getItem("totalSteps")) || 1; // 避免除零错误
+            let correctMatches = parseInt(localStorage.getItem("correctMatches")) || 0;
+            let wrongAttempts = parseInt(localStorage.getItem("wrongAttempts")) || 0;
+            let reactionTime = parseFloat(localStorage.getItem("reactionTime")) || 0;
+            let rounds = 3; // 设定 3 轮关卡，后续可以从游戏逻辑中读取
+    
+            let reactionTimeThreshold = 10; // 设定最大容忍的平均反应时间 (秒)
+    
+            // 计算记忆准确度评分
+            let memoryAccuracy = ((correctMatches / totalSteps) * 100).toFixed(1); 
+    
+            // 计算记忆耐力评分（根据匹配次数 / 关卡数）
+            let memoryEndurance = Math.max(0, Math.min(100, (correctMatches / rounds) * 20));
+    
+            // 计算反应速度评分
+            let reactionScore = 0;
+            if (correctMatches > 0) {
+                let avgReactionTime = reactionTime / correctMatches;
+                reactionScore = avgReactionTime > reactionTimeThreshold ? 0 : Math.max(0, Math.min(100, 100 - (avgReactionTime / reactionTimeThreshold) * 100));
+            }
+    
+            // 计算错误率评分
+            let errorRate = ((wrongAttempts / totalSteps) * 100).toFixed(1); 
+    
+            // 计算记忆综合评分
+            let memoryScore = ((memoryAccuracy * 0.4) + (reactionScore * 0.4) + ((100 - errorRate) * 0.2)).toFixed(1);
+    
+            // 显示数值
+            document.getElementById("correctMatches").textContent = correctMatches;
+            document.getElementById("totalSteps").textContent = totalSteps;
+            document.getElementById("wrongAttempts").textContent = wrongAttempts;
+            document.getElementById("reactionTime").textContent = reactionTime.toFixed(2);
+    
+            // 画雷达图
+            let ctx = document.getElementById("memoryRadarChart").getContext("2d");
+    
+            if (ctx) {
+                new Chart(ctx, {
+                    type: "radar",
+                    data: {
+                        labels: ["记忆准确度评分", "记忆耐力评分", "反应速度评分", "错误率评分", "记忆综合评分"],
+                        datasets: [{
+                            label: "记忆分析",
+                            data: [memoryAccuracy, memoryEndurance, reactionScore, errorRate, memoryScore],
+                            backgroundColor: "rgba(54, 162, 235, 0.3)",
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            borderWidth: 2,
+                            pointBackgroundColor: "rgba(54, 162, 235, 1)"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { display: true },
+                                suggestedMin: 0,
+                                suggestedMax: 100
+                            }
+                        },
+                        plugins: {
+                            legend: { position: "top" }
+                        }
+                    }
+                });
+            } else {
+                console.error("无法找到 memoryRadarChart 画布元素！");
+            }
+        });
+    </script>
+    
+
+</body>
+</html>

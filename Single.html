@@ -148,37 +148,68 @@
         
     });
 
+
+    
     function startGame(level) {
-        let images = ['card/img 1.jpg', 'card/img 2.jpg', 'card/img 3.jpg', 'card/img 4.jpg'];
-        let cards = [...images, ...images];  
-        gameContainer.innerHTML = '';
-        cards.sort(() => Math.random() - 0.5);
+    let images = ['card/img 1.jpg', 'card/img 2.jpg', 'card/img 3.jpg', 'card/img4.jpg'];
+    let cards = [...images, ...images];  
+    gameContainer.innerHTML = '';
+    cards.sort(() => Math.random() - 0.5);
 
-        cards.forEach(imgSrc => {
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
-                <div class="card-inner">
-                    <div class="card-front"><img src="${imgSrc}"></div>
-                    <div class="card-back"></div>
-                </div>
-            `;
-            card.addEventListener('click', () => handleCardClick(card));
-            gameContainer.appendChild(card);
-        });
+    cards.forEach(imgSrc => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.innerHTML = `
+            <div class="card-inner">
+                <div class="card-front"><img src="${imgSrc}"></div>
+                <div class="card-back"></div>
+            </div>
+        `;
+        card.addEventListener('click', () => handleCardClick(card));
+        gameContainer.appendChild(card);
+    });
 
-        moveCount = 0;
-        errorCount = 0;
-        timeCount = 0;
-        score = 0;
-        updateStats();
+    moveCount = 0;
+    errorCount = 0;
+    timeCount = 0;
+    score = 0;
+    updateStats();
 
-        if (timer) clearInterval(timer);
+    if (timer) clearInterval(timer);
+
+    // **LEVEL 2: 限时匹配（15秒后结束游戏）**
+    if (level === 2) {
+        timer = setTimeout(() => {
+            alert("时间到！游戏结束！");
+            resetGame();
+        }, 15000);
+    } else {
         timer = setInterval(() => {
             timeCount++;
             document.getElementById("time").textContent = timeCount;
         }, 1000);
     }
+
+    // **LEVEL 3: 记忆干扰（黑屏2秒）**
+    if (level === 3) {
+        setInterval(() => {
+            document.body.style.backgroundColor = "#000";  // 黑屏
+            setTimeout(() => {
+                document.body.style.backgroundColor = "#FFDD57";  // 恢复
+            }, 2000);
+        }, 10000); // 每10秒触发一次
+    }
+
+    // **LEVEL 5: 每隔5秒打乱卡片**
+    if (level === 5) {
+        setInterval(() => {
+            let shuffled = [...gameContainer.children];
+            shuffled.sort(() => Math.random() - 0.5);
+            shuffled.forEach(card => gameContainer.appendChild(card));
+        }, 5000);
+    }
+}
+
 
     let flippedCards = [];
     let lockBoard = false;

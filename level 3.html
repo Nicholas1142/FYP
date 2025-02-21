@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level 3 - 进阶挑战模式</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .grid { display: grid; gap: 10px; margin-top: 10px; }
+        .card { width: 80px; height: 80px; background-color: lightblue; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+        .hidden { background-color: gray; color: transparent; }
+        .matched { background-color: green; color: white; }
+    </style>
+</head>
+<body>
+    <h2>Level 3 - 进阶挑战模式</h2>
+    <p>剩余时间: <span id="timer">60</span> 秒</p>
+    <p>当前网格大小: <span id="gridSizeDisplay">4x4</span></p>
+    
+    <div class="container">
+        <div id="grid" class="grid"></div>
+    </div>
+    
+    <script>
+        const grid = document.getElementById("grid");
+        const gridSizeDisplay = document.getElementById("gridSizeDisplay");
+        let timeLeft = 90;
+        let currentRound = 0;
+        let gridSizes = [[4, 4], [4, 5], [4, 6]];
+        let firstCard = null;
+        let lockBoard = false;
+
+        function startGame() {
+            generateGrid(gridSizes[currentRound]);
+            setTimeout(hideCards, 10000);
+            startTimer();
+        }
+
+        function generateGrid(size) {
+            grid.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${size[1]}, 80px)`;
+            gridSizeDisplay.textContent = `${size[0]}x${size[1]}`;
+            let totalCards = size[0] * size[1];
+            let numbers = Array.from({ length: totalCards / 2 }, (_, i) => i + 1);
+            let cardValues = [...numbers, ...numbers].sort(() => Math.random() - 0.5);
+            
+            cardValues.forEach(value => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+                card.dataset.value = value;
+                card.textContent = value;
+                card.addEventListener("click", flipCard);
+                grid.appendChild(card);
+            });
+        }
+
+        function hideCards() {
+            document.querySelectorAll(".card").forEach(card => {
+                card.classList.add("hidden");
+                card.textContent = "";
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard || this.classList.contains("matched")) return;
+            this.classList.remove("hidden");
+            this.textContent = this.dataset.value;
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+            if (firstCard.dataset.value === this.dataset.value) {
+                firstCard.classList.add("matched");
+                this.classList.add("matched");
+                firstCard = null;
+                checkWin();
+            } else {
+                lockBoard = true;
+                setTimeout(() => {
+                    firstCard.classList.add("hidden");
+                    firstCard.textContent = "";
+                    this.classList.add("hidden");
+                    this.textContent = "";
+                    firstCard = null;
+                    lockBoard = false;
+                }, 800);
+            }
+        }
+
+        function checkWin() {
+            if (document.querySelectorAll(".matched").length === gridSizes[currentRound][0] * gridSizes[currentRound][1]) {
+                if (currentRound < gridSizes.length - 1) {
+                    currentRound++;
+                    setTimeout(() => {
+                        generateGrid(gridSizes[currentRound]);
+                        setTimeout(hideCards, 3000);
+                    }, 1000);
+                } else {
+                    alert("恭喜！你完成了所有回合！");
+                    location.reload();
+                }
+            }
+        }
+
+        function startTimer() {
+            const timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").textContent = timeLeft;
+                if (timeLeft === 0) {
+                    clearInterval(timer);
+                    alert("时间结束，游戏失败！");
+                    location.reload();
+                }
+            }, 1000);
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
