@@ -5,10 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Level 2 - 顺序匹配模式</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 100px); gap: 10px; margin-top: 10px; }
-        .card { 
+        body { font-family: Arial, sans-serif;  margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .game-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            max-width: 900px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .header { text-align: left; margin-bottom: 20px; }
+        .grid-container { display: flex; }
+        .sequence-container { width: 25%; padding-right: 20px; }
+        .sequence-box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 1; }
+        .card {
             width: 100px; height: 150px; background-color: gray; 
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; position: relative; border-radius: 10px;
@@ -21,20 +32,46 @@
         .revealed { background-color: white !important; }
         .revealed img { display: block; }
         .highlight { font-weight: bold; color: #d9534f; }
+
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
     </style>
+
+
+
+
 </head>
 <body>
-    <h2>Level 2 - 顺序匹配模式</h2>
-    <p>当前回合: <span id="roundNumber">1</span> / 3</p>
-    <p>系统提示匹配顺序：</p>
-    <div id="sequenceDisplay"></div>
-    
-    <p>剩余时间: <span id="timer">45</span> 秒</p>
-    
-    <div class="container">
-        <h3>玩家翻牌区</h3>
-        <div id="grid" class="grid"></div>
+
+    <video class="video-background" autoplay loop muted>
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="game-container">
+        <div class="header">
+            <h2>Level 2 - 顺序匹配模式</h2>
+            <p>当前回合: <span id="roundNumber">1</span> / 3</p>
+            <p>系统提示匹配顺序：</p>
+        </div>
+        
+        <div class="grid-container">
+            <div class="sequence-container">
+                <div id="sequenceDisplay" class="sequence-box"></div>
+                <p>剩余时间: <span id="timer">45</span> 秒</p>
+            </div>
+            <div id="grid" class="grid"></div>
+        </div>
     </div>
+
+    
 
     <script>
         const grid = document.getElementById("grid");
