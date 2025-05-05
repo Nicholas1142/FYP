@@ -1,11 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Game - Select Level</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+  </style>
 </head>
-<body>
-    
+<body class="bg-blue-100 min-h-screen flex flex-col items-center py-10">
+
+  <h1 class="text-4xl font-bold mb-8">🧠 Choose Your Level</h1>
+
+  <div id="level-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl px-4">
+    <!-- JS 生成卡片 -->
+  </div>
+
+  <button onclick="goBack()" class="mt-10 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">
+    ⬅ Back to Menu
+  </button>
+
+  <script>
+    const levels = [
+      { id: 'easy', name: 'Easy', grid: '4x4', unlocked: true, bestTime: null, completed: false, file: 'level 1.html' },
+      { id: 'medium', name: 'Medium', grid: '4x5', unlocked: false, bestTime: null, completed: false, file: 'level 2.html' },
+      { id: 'hard', name: 'Hard', grid: '6x6', unlocked: false, bestTime: null, completed: false, file: 'level 3.html' }
+    ];
+
+    const saved = localStorage.getItem('levels');
+    if (saved) {
+      const savedLevels = JSON.parse(saved);
+      levels.forEach((lvl, i) => Object.assign(lvl, savedLevels[i]));
+    }
+
+    const container = document.getElementById('level-container');
+    container.innerHTML = '';
+
+    levels.forEach(level => {
+      const card = document.createElement('div');
+      card.className = `bg-white rounded-2xl shadow-md p-6 transition ${
+        level.unlocked ? 'hover:scale-105 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+      }`;
+
+      card.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">${level.name}</h2>
+        <p class="text-sm text-gray-600 mb-1">Grid: ${level.grid}</p>
+        <p class="text-sm text-gray-600 mb-1">Best Time: ${level.bestTime || '--'}</p>
+        <p class="text-sm ${
+          level.completed ? 'text-green-600' :
+          level.unlocked ? 'text-yellow-600' : 'text-gray-500'
+        }">
+          ${level.completed ? '✔ Completed' :
+            level.unlocked ? '⏳ In Progress' : '🔒 Locked'}
+        </p>
+      `;
+
+      if (level.unlocked && level.file !== '#') {
+        card.addEventListener('click', () => {
+          completeLevel(level.id);
+          window.location.href = level.file + `?level=${level.id}`;
+        });
+      } else if (!level.unlocked) {
+        card.addEventListener('click', () => {
+          alert('Complete previous levels to unlock this one!');
+        });
+      }
+
+      container.appendChild(card);
+    });
+
+    function completeLevel(currentId) {
+      const index = levels.findIndex(l => l.id === currentId);
+      if (index >= 0) {
+        levels[index].completed = true;
+        levels[index].bestTime = '01:23'; // 模拟完成时间，可替换为实际游戏传入时间
+        if (levels[index + 1]) {
+          levels[index + 1].unlocked = true;
+        }
+        localStorage.setItem('levels', JSON.stringify(levels));
+      }
+    }
+
+    function goBack() {
+      window.location.href = 'Main.html'; // 返回主菜单页面
+    }
+  </script>
 </body>
 </html>

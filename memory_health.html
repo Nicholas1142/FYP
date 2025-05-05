@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆健康分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .score-box {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .record-table th, .record-table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        .radar-container {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+        .line-chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>记忆健康分析报告</h1>
+
+    <!-- Section 1: 记忆能力分析 -->
+    <div class="section">
+        <h2>🧠 记忆能力分析</h2>
+        <p class="score-box">整体记忆评分：<span style="color: #007bff;">-</span></p>
+        <p id="summary-text">分析总结：-</p>
+        <ul>
+            <li>短时记忆：-</li>
+            <li>注意力维持：-</li>
+            <li>反应速度：-</li>
+            <li>顺序记忆：-</li>
+            <li>干扰抵抗力：-</li>
+        </ul>
+    </div>
+
+    <!-- Section 2: 通关记录数据 -->
+    <div class="section">
+        <h2>📊 通关记录数据</h2>
+        <table class="record-table">
+            <thead>
+                <tr>
+                    <th>关卡</th>
+                    <th>用时</th>
+                    <th>错误次数</th>
+                    <th>成功率</th>
+                    <th>评分</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 动态插入行 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 3: 雷达图 + 评分 -->
+    <div class="section">
+        <h2>📈 记忆能力雷达图</h2>
+        <div class="radar-container">
+            <canvas id="memoryRadar"></canvas>
+        </div>
+    </div>
+
+    <!-- Section 4: 记忆评分趋势（最近30天） -->
+    <div class="section">
+        <h2>📅 记忆评分趋势（最近30天）</h2>
+        <div class="line-chart-container">
+            <canvas id="scoreTrendChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+     let radarChart;
+        let scoreTrendChart;
+
+        window.addEventListener("DOMContentLoaded", function () {
+            const data = JSON.parse(localStorage.getItem("memoryGameResult"));
+            
+            if (data) {
+                // 更新整体评分
+                document.querySelector('.score-box span').textContent = `${data.overallScore} / 100`;
+
+                // 更新分析总结
+                const summaryText = data.abilities.sequence < 70
+                    ? "您的短时记忆与反应速度表现良好，顺序记忆略弱，建议重点提升。"
+                    : "各项记忆能力表现均衡，请继续保持。";
+                document.getElementById("summary-text").textContent = "分析总结：" + summaryText;
+
+                // 更新各项能力分
+                const listItems = document.querySelectorAll(".section ul li");
+                listItems[0].textContent = "短时记忆：" + data.abilities.shortTerm;
+                listItems[1].textContent = "注意力维持：" + data.abilities.attention;
+                listItems[2].textContent = "反应速度：" + data.abilities.reaction;
+                listItems[3].textContent = "顺序记忆：" + data.abilities.sequence;
+                listItems[4].textContent = "干扰抵抗力：" + data.abilities.resistance;
+
+                // 更新表格
+                const tbody = document.querySelector(".record-table tbody");
+                tbody.innerHTML = "";
+                data.levels.forEach((lvl) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${lvl.level}</td>
+                        <td>${lvl.time}s</td>
+                        <td>${lvl.errors}</td>
+                        <td>${Math.round(lvl.accuracy * 100)}%</td>
+                        <td>${lvl.score}</td>
+                        <td>${lvl.note}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // 更新雷达图数据
+                radarChart.data.datasets[0].data = [
+                    data.abilities.shortTerm,
+                    data.abilities.attention,
+                    data.abilities.reaction,
+                    data.abilities.sequence,
+                    data.abilities.resistance
+                ];
+                radarChart.update();
+            }
+
+            // 显示当天日期
+            const today = new Date();
+            const todayStr = today.toLocaleDateString('zh-CN');
+            const todayElement = document.createElement('p');
+            todayElement.textContent = `今天是：${todayStr}`;
+            document.body.prepend(todayElement);
+
+            // 处理历史记录数据
+            const historyData = JSON.parse(localStorage.getItem("memoryGameHistory")) || [];
+            const last30Days = historyData.filter(item => {
+                const itemDate = new Date(item.date);
+                return (today - itemDate) <= (30 * 24 * 60 * 60 * 1000); // 过去30天的数据
+            });
+
+            const dates = last30Days.map(item => item.date);
+            const scores = last30Days.map(item => item.overallScore);
+
+            // 绘制折线图
+            const ctx = document.getElementById('scoreTrendChart').getContext('2d');
+            scoreTrendChart = new Chart(ctx, {
+                type: 'line', // 折线图
+                data: {
+                    labels: dates, // 横坐标：日期
+                    datasets: [{
+                        label: '记忆评分',
+                        data: scores, // 纵坐标：得分
+                        fill: false,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '日期'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '记忆评分'
+                            },
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 10
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // 初始化雷达图
+        const ctx = document.getElementById('memoryRadar').getContext('2d');
+        radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['短时记忆', '注意力', '反应速度', '顺序记忆', '干扰抵抗力'],
+                datasets: [{
+                    label: '记忆评分',
+                    data: [0, 0, 0, 0, 0], // 初始为空
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
